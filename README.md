@@ -15,7 +15,7 @@ TOTP-based two-factor authentication for Django admin. Works with Google Authent
 ## Installation
 
 ```bash
-pip install django-admin-2fa
+pip install django-admin-totp
 ```
 
 ## Quick Start
