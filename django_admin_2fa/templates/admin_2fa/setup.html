@@ -1,0 +1,65 @@
+{% extends "admin_2fa/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="twofa-container">
+    <h1>2FA Kurulumu</h1>
+
+    {% if error %}
+    <div class="twofa-error shake">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <ol class="twofa-instructions">
+        <li>Telefonunuzda Google Authenticator veya uyumlu bir TOTP uygulaması açın.</li>
+        <li>Aşağıdaki QR kodunu tarayın veya anahtarı elle girin.</li>
+        <li>Uygulamada görünen 6 haneli kodu aşağıya yazarak kurulumu tamamlayın.</li>
+    </ol>
+
+    <div class="twofa-qr">
+        <img src="{{ qr_code }}" alt="QR Code">
+    </div>
+
+    <p style="text-align: center; font-size: 0.85rem; color: var(--twofa-quiet); margin-bottom: 4px;">
+        QR kod çalışmıyorsa bu anahtarı elle girin:
+    </p>
+
+    <div class="twofa-secret-wrapper">
+        <div class="twofa-secret" id="secret-key">{{ secret_key }}</div>
+        <button type="button" class="twofa-copy-btn" onclick="copySecret()">Kopyala</button>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="twofa-input-group">
+            <label for="code">Doğrulama Kodu</label>
+            <input type="text"
+                   id="code"
+                   name="code"
+                   class="twofa-code-input"
+                   maxlength="6"
+                   autocomplete="one-time-code"
+                   inputmode="numeric"
+                   pattern="[0-9]{6}"
+                   placeholder="000000"
+                   autofocus
+                   required>
+        </div>
+        <button type="submit" class="twofa-btn twofa-btn-primary">Kurulumu Tamamla</button>
+    </form>
+</div>
+
+<script>
+function copySecret() {
+    var text = document.getElementById('secret-key').textContent;
+    navigator.clipboard.writeText(text).then(function() {
+        var btn = document.querySelector('.twofa-copy-btn');
+        btn.textContent = 'Kopyalandı!';
+        setTimeout(function() { btn.textContent = 'Kopyala'; }, 2000);
+    });
+}
+</script>
+{% endblock %}

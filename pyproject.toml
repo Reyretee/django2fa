@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-admin-2fa"
+version = "0.1.0"
+description = "TOTP-based two-factor authentication for Django admin"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "Django>=4.2",
+    "pyotp>=2.9.0",
+    "qrcode[pil]>=7.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-django",
+    "pytest-cov",
+    "factory-boy",
+]
+
+[tool.setuptools.packages.find]
+include = ["django_admin_2fa*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"

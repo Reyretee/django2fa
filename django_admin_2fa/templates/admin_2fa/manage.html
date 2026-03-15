@@ -1,0 +1,75 @@
+{% extends "admin_2fa/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="twofa-container">
+    <h1>2FA Yönetimi</h1>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="twofa-success">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    {% if has_device %}
+    <div class="twofa-status twofa-status-active">
+        <span class="twofa-status-dot"></span>
+        2FA Aktif
+    </div>
+    {% else %}
+    <div class="twofa-status twofa-status-inactive">
+        <span class="twofa-status-dot"></span>
+        2FA Pasif
+    </div>
+    {% endif %}
+
+    <ul class="twofa-info-list">
+        {% if device %}
+        <li>
+            <strong>Kurulum Tarihi</strong>
+            <span>{{ device.created_at|date:"d.m.Y H:i" }}</span>
+        </li>
+        <li>
+            <strong>Son Kullanım</strong>
+            <span>{% if device.last_used_at %}{{ device.last_used_at|date:"d.m.Y H:i" }}{% else %}—{% endif %}</span>
+        </li>
+        {% endif %}
+        {% if last_attempt %}
+        <li>
+            <strong>Son Başarılı Giriş</strong>
+            <span>{{ last_attempt.timestamp|date:"d.m.Y H:i" }} ({{ last_attempt.method|upper }})</span>
+        </li>
+        {% endif %}
+        <li>
+            <strong>Kalan Yedek Kod</strong>
+            <span>{{ remaining_codes }}</span>
+        </li>
+    </ul>
+
+    <div class="twofa-manage-actions">
+        <a href="{% url 'admin_2fa:backup-codes' %}" class="twofa-btn twofa-btn-secondary" style="text-align: center;">
+            Yedek Kodları Yönet
+        </a>
+
+        {% if has_device %}
+        <form method="post" onsubmit="return confirm('2FA sıfırlanacak ve yeniden kurulum gerekecek. Emin misiniz?');">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reset">
+            <button type="submit" class="twofa-btn twofa-btn-danger" style="width: 100%;">
+                2FA Sıfırla / Yeni Cihaz Kur
+            </button>
+        </form>
+        {% else %}
+        <a href="{% url 'admin_2fa:setup' %}" class="twofa-btn twofa-btn-primary" style="text-align: center;">
+            2FA Kurulumuna Git
+        </a>
+        {% endif %}
+
+        <a href="{% url 'admin:index' %}" style="text-align: center; color: var(--twofa-link); font-size: 0.85rem; margin-top: 8px; display: block;">
+            ← Admin Paneline Dön
+        </a>
+    </div>
+</div>
+{% endblock %}

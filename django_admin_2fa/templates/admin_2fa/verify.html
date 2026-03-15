@@ -1,0 +1,117 @@
+{% extends "admin_2fa/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="twofa-container">
+    <h1>İki Faktörlü Doğrulama</h1>
+    <p class="twofa-username">Hoş geldin, <strong>{{ username }}</strong></p>
+
+    {% if is_locked_out %}
+    <div class="twofa-lockout">
+        <strong>Hesap Geçici Olarak Kilitlendi</strong>
+        <span id="lockout-timer">{{ lockout_remaining }}</span> saniye sonra tekrar deneyebilirsiniz.
+    </div>
+    {% else %}
+
+    {% if error %}
+    <div class="twofa-error{% if has_error %} shake{% endif %}">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div id="totp-section">
+        <form method="post" action="?next={{ next_url|urlencode }}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url }}">
+            <input type="hidden" name="use_backup" value="0" id="use-backup-flag">
+            <div class="twofa-input-group">
+                <label for="code">Doğrulama Kodu</label>
+                <input type="text"
+                       id="code"
+                       name="code"
+                       class="twofa-code-input"
+                       maxlength="10"
+                       autocomplete="one-time-code"
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       placeholder="000000"
+                       autofocus
+                       required>
+            </div>
+            <button type="submit" class="twofa-btn twofa-btn-primary">Doğrula</button>
+        </form>
+    </div>
+
+    <div class="twofa-toggle">
+        <a href="#" id="toggle-backup">Yedek kod kullan</a>
+    </div>
+
+    <div class="twofa-backup-section" id="backup-section">
+        <form method="post" action="?next={{ next_url|urlencode }}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url }}">
+            <input type="hidden" name="use_backup" value="1">
+            <div class="twofa-input-group">
+                <label for="backup-code">Yedek Kod</label>
+                <input type="text"
+                       id="backup-code"
+                       name="code"
+                       class="twofa-backup-input"
+                       maxlength="9"
+                       placeholder="XXXX-XXXX"
+                       autocomplete="off">
+            </div>
+            <button type="submit" class="twofa-btn twofa-btn-primary">Yedek Kod ile Doğrula</button>
+        </form>
+    </div>
+
+    {% endif %}
+
+    <div class="twofa-not-my-account">
+        <form method="post" action="{% url 'admin_2fa:logout' %}">
+            {% csrf_token %}
+            <button type="submit">Bu hesap benim değil — çıkış yap ve farklı hesapla giriş yap</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var toggleLink = document.getElementById('toggle-backup');
+    var backupSection = document.getElementById('backup-section');
+
+    if (toggleLink && backupSection) {
+        toggleLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            var isActive = backupSection.classList.contains('active');
+            backupSection.classList.toggle('active');
+            this.textContent = isActive ? 'Yedek kod kullan' : 'TOTP kodu kullan';
+
+            if (!isActive) {
+                var input = document.getElementById('backup-code');
+                if (input) input.focus();
+            } else {
+                var input = document.getElementById('code');
+                if (input) input.focus();
+            }
+        });
+    }
+
+    {% if is_locked_out %}
+    var remaining = {{ lockout_remaining }};
+    var timerEl = document.getElementById('lockout-timer');
+    var interval = setInterval(function() {
+        remaining--;
+        if (remaining <= 0) {
+            clearInterval(interval);
+            location.reload();
+        } else {
+            timerEl.textContent = remaining;
+        }
+    }, 1000);
+    {% endif %}
+});
+</script>
+{% endblock %}

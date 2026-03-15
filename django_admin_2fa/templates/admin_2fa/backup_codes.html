@@ -1,0 +1,68 @@
+{% extends "admin_2fa/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="twofa-container">
+    <h1>Yedek Kodlar</h1>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="twofa-success">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <p class="twofa-codes-stats">
+        <strong>{{ remaining }}</strong> / {{ total }} kod kullanılabilir
+        {% if used > 0 %} ({{ used }} kod kullanıldı){% endif %}
+    </p>
+
+    {% if show_codes %}
+    <div class="twofa-warning">
+        Bu kodları güvenli bir yere kaydedin. Bu sayfadan ayrıldıktan sonra tekrar gösterilmeyecekler.
+    </div>
+
+    <div class="twofa-codes-grid" id="codes-grid">
+        {% for code in codes %}
+        <div class="twofa-code-item">{{ code }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="twofa-codes-actions">
+        <button type="button" class="twofa-btn twofa-btn-secondary" onclick="copyAllCodes()">Tümünü Kopyala</button>
+        <button type="button" class="twofa-btn twofa-btn-secondary" onclick="window.print()">Yazdır</button>
+    </div>
+    {% else %}
+    <p class="twofa-codes-stats">
+        Yedek kodlarınız güvenlik nedeniyle yalnızca oluşturuldukları anda gösterilir.
+    </p>
+    {% endif %}
+
+    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--twofa-border);">
+        <form method="post" onsubmit="return confirm('Mevcut kodlar silinecek ve yeni kodlar oluşturulacak. Emin misiniz?');">
+            {% csrf_token %}
+            <button type="submit" class="twofa-btn twofa-btn-danger" style="width: 100%;">Yeni Kod Seti Oluştur</button>
+        </form>
+    </div>
+
+    <div style="text-align: center; margin-top: 16px;">
+        <a href="{% url 'admin_2fa:manage' %}" style="color: var(--twofa-link); font-size: 0.85rem;">← 2FA Yönetimine Dön</a>
+    </div>
+</div>
+
+{% if show_codes %}
+<script>
+function copyAllCodes() {
+    var items = document.querySelectorAll('.twofa-code-item');
+    var codes = [];
+    items.forEach(function(el) { codes.push(el.textContent.trim()); });
+    navigator.clipboard.writeText(codes.join('\n')).then(function() {
+        var btns = document.querySelectorAll('.twofa-codes-actions .twofa-btn');
+        btns[0].textContent = 'Kopyalandı!';
+        setTimeout(function() { btns[0].textContent = 'Tümünü Kopyala'; }, 2000);
+    });
+}
+</script>
+{% endif %}
+{% endblock %}
